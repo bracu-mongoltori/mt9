@@ -1,0 +1,11 @@
+axis_linear: 7
+scale_linear: 200
+scale_linear_turbo: 400
+
+axis_angular: 6
+scale_angular: 60
+scale_angular_turbo: 600
+
+
+enable_button: 5  # L2 shoulder button
+enable_turbo_button: 6  # L1 shoulder button

@@ -1,0 +1,6 @@
+<launch>
+    <arg name="rover_base" default="/dev/ttyACM0"/>
+    <node name="rover_node" pkg="rosserial_python" type="serial_node.py" args="$(arg rover_base)" output="screen"/>
+    <arg name="arm" default="/dev/ttyUSB0"/>
+    <node name="arm_node" pkg="rosserial_python" type="serial_node.py" args="$(arg arm)" output="screen"/>
+</launch>
