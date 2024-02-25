@@ -1,0 +1,11 @@
+<launch>
+
+    <machine name="mt-09" address="192.168.1.69" user="mt-09" password="1990" env-loader="~/catkin_ws/devel/loder.sh"/>
+
+    <arg name="rover_base" default="/dev/ttyUSB0"/>
+    <!-- <node machine="mt-09" name="roscore" pkg="mt9" type="roscore.py"/> -->
+    <node machine="mt-09" name="rover_node" pkg="rosserial_python" type="serial_node.py" args="$(arg rover_base)"/>
+
+    <include file="$(find mt9)/launch/joy.launch"/>
+    
+</launch>

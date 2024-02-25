@@ -1,0 +1,6 @@
+<launch>
+  <machine name="mt-09" address="192.168.1.69" user="mt-09" password="1990" env-loader="~/catkin_ws/devel/loder.sh"/>
+
+  <node machine="mt-09" name="test" pkg="mt9" type="talker.py" />
+
+</launch>
