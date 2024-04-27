@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <title>Arrow</title>
+    <script type="text/javascript" src="lib/roslib/eventemitter2.min.js"></script>
+    <script type="text/javascript" src="lib/roslib/roslib.min.js"></script>
+
+  </head>
+  <body>
+    <div class="arrow-container">
+      <div class="arrow" id="arrow"></div>
+    </div>
+
+ 
+    
+
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .arrow-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+      }
+
+      .arrow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: bottom;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 40px solid red;
+        transform: translateX(-50%) translateY(-50%);
+        transition: transform 0.5s ease;
+      }
+    </style>
+
+    <script src="read_yaw.js"></script>
+
+    <!-- <script>
+      const arrow = document.getElementById("arrow");
+
+      function rotateArrow(angle) {
+        arrow.style.transform = `translateX(-50%) translateY(-50%) rotate(${angle}deg)`;
+        if (angle >= 360) {
+          angle = 0; // Reset angle to 0 after 360 degrees
+        }
+      }
+
+      rotateArrow(90);
+    </script> -->
+  </body>
+</html>
