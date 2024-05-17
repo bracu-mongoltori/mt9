@@ -18,7 +18,7 @@ const double  max_rpm = 7.2;
 
 ros::NodeHandle nh;
 
-void arm_callback(const std_msgs::String& arm_msg){
+void omnidir_callback(const std_msgs::String &arm_msg){
 
   char arm_char = arm_msg.data[0];
 
@@ -30,8 +30,6 @@ void arm_callback(const std_msgs::String& arm_msg){
       digitalWrite(relay2, LOW);
       digitalWrite(relay3, LOW);
       digitalWrite(relay4, LOW);
-      nh.loginfo("SW1");
-      nh.loginfo(arm_msg.data);
       delay(10);
       break;
     
@@ -40,8 +38,6 @@ void arm_callback(const std_msgs::String& arm_msg){
       digitalWrite(relay2, HIGH);
       digitalWrite(relay3, LOW);
       digitalWrite(relay4, LOW);
-      nh.loginfo("SW2");
-      nh.loginfo(arm_msg.data);
       delay(10);
       break;
 
@@ -50,7 +46,7 @@ void arm_callback(const std_msgs::String& arm_msg){
       digitalWrite(relay2, LOW);
       digitalWrite(relay3, LOW);
       digitalWrite(relay4, HIGH);
-      nh.loginfo("SW3");
+      delay(10);
       break;
       
     case 'v':
@@ -58,7 +54,7 @@ void arm_callback(const std_msgs::String& arm_msg){
       digitalWrite(relay2, LOW);
       digitalWrite(relay3, HIGH);
       digitalWrite(relay4, LOW);
-      nh.loginfo("SW4");
+      delay(10);
       break;
 
      default:
@@ -66,7 +62,6 @@ void arm_callback(const std_msgs::String& arm_msg){
       digitalWrite(relay2, LOW);
       digitalWrite(relay3, LOW);
       digitalWrite(relay4, LOW);
-      nh.loginfo("No switch");
       break;
   }
 
@@ -94,7 +89,7 @@ void cmd_vel_callback(const geometry_msgs::Twist &vel_msg){
 }
 
 
-void holo_callback(const std_msgs::String& arm_msg){
+void holo_callback(const std_msgs::String &arm_msg){
 
   char arm_char = arm_msg.data[0];
 
@@ -102,30 +97,28 @@ void holo_callback(const std_msgs::String& arm_msg){
 
     case 'o':
     
-      digitalWrite(6, HIGH);
-      digitalWrite(10, HIGH);
-      digitalWrite(5, LOW);
-      digitalWrite(9, LOW);
+      analogWrite(6, 200);
+      analogWrite(10, 200);
+      analogWrite(5, 0);
+      analogWrite(9, 0);
       nh.loginfo("right");
-      nh.loginfo(arm_msg.data);
       delay(10);
       break;
     
     case 'p':
-      digitalWrite(6, LOW);
-      digitalWrite(10, LOW);
-      digitalWrite(5, HIGH);
-      digitalWrite(9, HIGH);
+      analogWrite(6, 0);
+      analogWrite(10, 0);
+      analogWrite(5, 200);
+      analogWrite(9, 200);
       nh.loginfo("left");
-      nh.loginfo(arm_msg.data);
       delay(10);
       break;
 
      default:
-      digitalWrite(6, LOW);
-      digitalWrite(10, LOW);
-      digitalWrite(5, LOW);
-      digitalWrite(9, LOW);
+      analogWrite(6, 0);
+      analogWrite(10, 0);
+      analogWrite(5, 0);
+      analogWrite(9, 0);
       nh.loginfo("No ting");
       break;
   }
@@ -135,11 +128,9 @@ void holo_callback(const std_msgs::String& arm_msg){
   
 }
 
-ros::Subscriber<geometry_msgs::Twist> rover("cmd_vel", cmd_vel_callback);
-ros::Subscriber<std_msgs::String> arm("keys", &arm_callback );
-ros::Subscriber<std_msgs::String> holo("keys", &holo_callback );
-
-
+ros::Subscriber<geometry_msgs::Twist> rover("cmd_vel", &cmd_vel_callback);
+ros::Subscriber<std_msgs::String> omnidir("keys", &omnidir_callback);
+ros::Subscriber<std_msgs::String> holo("holonomic", &holo_callback);
 
 void setup() {
   // put your setup code here, to run once:
@@ -151,7 +142,7 @@ void setup() {
   
   nh.initNode();
   nh.subscribe(rover);
-  nh.subscribe(arm);
+  nh.subscribe(omnidir);
   nh.subscribe(holo);
 }
 

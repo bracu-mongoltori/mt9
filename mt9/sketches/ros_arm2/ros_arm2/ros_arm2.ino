@@ -90,7 +90,7 @@ void arm_callback(const std_msgs::String& arm_msg){
       nh.loginfo("SW6");
       break;
     
-    case 'o':
+    case 'x':
       digitalWrite(relay1, HIGH);
       digitalWrite(relay2, HIGH);
       digitalWrite(relay3, HIGH);
@@ -100,7 +100,7 @@ void arm_callback(const std_msgs::String& arm_msg){
       nh.loginfo("SW7");
       break;
     
-    case 'p':
+    case 'c':
       digitalWrite(relay1, HIGH);
       digitalWrite(relay2, HIGH);
       digitalWrite(relay3, LOW);

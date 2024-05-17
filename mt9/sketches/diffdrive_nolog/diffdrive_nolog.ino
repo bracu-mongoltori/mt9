@@ -3,7 +3,7 @@
 #include <geometry_msgs/Twist.h>
 
 IBT r_wheel(6, 5);
-IBT l_wheel(10, 9);
+IBT l_wheel(9, 10);
 
 const double b = 15;
 const double r = 16.5;
