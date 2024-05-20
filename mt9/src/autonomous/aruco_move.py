@@ -5,7 +5,7 @@ from std_msgs.msg import String
 from time import sleep
 import ast
 
-rospy.init_node("all_mover")
+rospy.init_node("aruco_move")
 
 rover = rospy.Publisher("/keys", String, queue_size=10)
 status = rospy.Publisher("/status", String, queue_size=10)
@@ -20,20 +20,16 @@ aruco_state, mallet_state, bottle_state = 0, 0, 0
 def aruco_callback(msg):
     global x_aruco, y_aruco, aruco_state
     aruco_data = msg.data.split()
-    # print(aruco_data)
-
     if int(aruco_data[0]) != 0:
         aruco_state = 1
         x_aruco = float(aruco_data[1])
         y_aruco = float(aruco_data[2])
 
-        # print(x_aruco, y_aruco)
     else:
         aruco_state = 0
 
 aruco_sub = rospy.Subscriber("/aruco_tag_info", String, aruco_callback)
-# bottle_sub = rospy.Subscriber("/bottle_info", String, bottle_callback)
-# mallet_sub = rospy.Subscriber("/mallet_info", String, mallet_callback)
+
 
 def status_stuff(status_string):
     print(status_string)
@@ -47,10 +43,7 @@ if __name__ == "__main__":
             if aruco_state == 0:
                 print("looking for tag")
                 rover.publish("a")
-                # rover.publish("-")
                 rate.sleep()
-                # sleep(1.5)
-#                continue
             else:
                 if x_aruco > ((img_res[0]/2) + 50):
                     key = "d"

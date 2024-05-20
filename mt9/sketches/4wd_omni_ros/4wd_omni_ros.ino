@@ -9,7 +9,7 @@ IBT r_wheel(2, 3);
 IBT r_back_wheel(4, 5);
 IBT l_wheel(6, 7);
 
-IBT omni_one(10, 11);
+IBT omni_one(12, 13);
 
 bool strafe_mode = false;
 bool skid_steer = true;
@@ -26,6 +26,15 @@ const double r = 16.5;
 const double  max_rpm = 7.2;
 
 ros::NodeHandle nh;
+
+std_msgs::String message_msg;
+ros::Publisher status("status", &message_msg);
+
+void status_stuff(char[] message){
+  nh.loginfo(message);
+  message_msg.data = message;
+  status.publish(message_msg);
+}
 
 void check_strafe(){
   if (digitalRead(A0) == LOW){
@@ -135,23 +144,23 @@ void loop() {
     check_strafe();
     if (strafe_mode != true){
       omni_one.setRawSpeed(max_vel);
-      nh.loginfo("changing mode strafe");
+      status_stuff("changing mode strafe");
       delay(10);
     }
     else{
       required_strafe_mode = false;
       omni_one.setRawSpeed(0);
-      nh.loginfo("mode changed strafe!");
+      status_stuff("mode changed strafe!");
     }
   }
 
   if (required_skid_mode == true){
     omni_one.setRawSpeed(max_vel);
-    nh.loginfo("changing to skid mode");
+    status_stuff("changing to skid mode");
   }
 
   if (required_lat_mode == true){
     omni_one.setRawSpeed(-max_vel);
-    nh.loginfo("changing to lateral mode");
+    status_stuff("changing to lateral mode");
   }
 }

@@ -163,7 +163,7 @@ void arm_callback(const std_msgs::String& arm_msg){
   
 }
 
-ros::Subscriber<sensor_msgs::Joy> joy_sub("joy", joyCallback);
+ros::Subscriber<sensor_msgs::Joy> joy_sub("joy_arm", joyCallback);
 ros::Subscriber<std_msgs::String> arm("keys", &arm_callback );
 
 void setup() {

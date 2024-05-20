@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
 
+#this version solves the problem for cases where target bearing is between -170 and +170. This version includes the gamepad control ease.
+
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool, Float32
 from sensor_msgs.msg import Imu, NavSatFix
 from tf import transformations
 from geometry_msgs.msg import Twist
@@ -10,10 +12,16 @@ from math import radians, cos, sin, asin, sqrt, atan2, degrees
 from time import sleep
 from sbg_driver.msg import SbgGpsPos, SbgEkfEuler
 import numpy as np
-import sys
 
 rospy.init_node("autonomous")
-status = rospy.Publisher("/status", String, queue_size=10)
+
+r = Float32()
+g = Float32()
+b = Float32()
+
+r.data = 0
+g.data = 1
+b.data = 2
 
 yaw = 0.0
 lat = 0.0
@@ -52,7 +60,7 @@ def distance_from_gps(lat1, lat2, lon1, lon2):
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * asin(sqrt(a))
 
-    return c * r * 1000
+    return c * r * 1000 #converts to meters
      
 
 def haversine_distance(curr_lat, curr_lon, target_lat, target_lon):
@@ -67,43 +75,46 @@ def bearing(curr_lat, curr_lon, target_lat, target_lon): #Bearing to waypoint (d
     d_lon = target_lon - curr_lon
     return degrees(atan2(sin(d_lon) * cos(target_lat), cos(curr_lat) * sin(target_lat) - (sin(curr_lat) * cos(target_lat) * cos(d_lon))))
 
-# def imu_callback(msg: Imu):
-#     global yaw
-#     orientation = msg.orientation
-#     (_, _, yaw) = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
-
-
 def sbg_euler(msg: SbgEkfEuler):
     global yaw
     yaw = degrees(msg.angle.z)
-
-# def gps_callback(msg: NavSatFix):
-#     global lat, lon
-#     lat = msg.latitude
-#     lon = msg.longitude
 
 def gps_callback(msg: SbgGpsPos):
     global lat, lon
     lat = msg.latitude
     lon = msg.longitude
 
+def autonomous_callback(msg: SbgGpsPos):
+    global aruco_move, mallet_move, bottle_move
+    detectors = [aruco_move, mallet_move, bottle_move]
+    idx = [0, 1, 2]
+    bully = Bool()
+    bully.data = True
+
+    target_lat = msg.latitude
+    target_lon = msg.longitude
+    detection_index = int(msg.altitude)
+
+    target_coords = {"latitude": target_lat, "longitude": target_lon} 
+    moveTo(coords=target_coords)
+    sleep(1)
+    if detection_index not in idx:
+        rgb_led.publish(g)
+        pass
+    else:
+        detectors[detection_index].publish(bully)
+    print("Enter next coordinate")
+
+    
 def status_stuff(status_string):
     print(status_string)
     status.publish(status_string)
 
-# imu_sub = rospy.Subscriber("/imu/data", Imu, imu_callback)
-yaw_sub = rospy.Subscriber("/sbg/ekf_euler", SbgEkfEuler, sbg_euler)
-# gps_sub = rospy.Subscriber("/imu/nav_sat_fix", NavSatFix, gps_callback)
-gps_sub = rospy.Subscriber("/sbg/gps_pos", SbgGpsPos, gps_callback)
-rover = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
-
 def moveTo(coords, yaw_threshold = 10):  # coords = {"longitude": 0, "latitude": 0}
     global yaw, lat, lon, distance_threshold
-    target_lat = coords[0]
-    target_lon = coords[1]
+    target_lat = coords["latitude"]
+    target_lon = coords["longitude"]
 
-    # while distance_from_gps(lat, target_lat, 0, 0) > 3 or distance_from_gps(0, 0, lon, target_lon) > 3:
-    # while lat > target_lat - 0.000005 and lon > target_lon - 0.000005:
     status_stuff("GPS: ")
     status_stuff(f"Distance to target: {distance_from_gps(lat, target_lat, lon, target_lon)}")
     while distance_from_gps(lat, target_lat, lon, target_lon) > distance_threshold:
@@ -112,15 +123,6 @@ def moveTo(coords, yaw_threshold = 10):  # coords = {"longitude": 0, "latitude":
         distance = haversine_distance(lat, lon, target_lat, target_lon)
         target_yaw = bearing(lat, lon, target_lat, target_lon)
 
-        # x = distance * cos(bearing_thing)
-        # y = distance * sin(bearing_thing)
-
-        # target_yaw = degrees(np.arctan2(y, x))
-        # target_yaw = 90 - target_yaw
-        # if x < 0 and y > 0:
-        #     target_yaw = 270 - target_yaw
-        # target_yaw = - target_yaw + 180
-
         upper_limit = target_yaw + yaw_threshold
         lower_limit = target_yaw - yaw_threshold
 
@@ -128,7 +130,7 @@ def moveTo(coords, yaw_threshold = 10):  # coords = {"longitude": 0, "latitude":
 
         status_stuff("GPS: ")
         status_stuff(f"lat: {lat}, lon: {lon}")
-        status_stuff(f"Distance to target: {distance_from_gps(lat, target_lat, lon, target_lon)}")
+        status_stuff(f"Distance to target: {distance}") #{distance_from_gps(lat, target_lat, lon, target_lon)}")
         status_stuff(f"current yaw: {yaw}, target yaw: {target_yaw}")
         status_stuff(f"angle left: {abs(target_yaw - yaw)}")
         status_stuff("")
@@ -137,19 +139,22 @@ def moveTo(coords, yaw_threshold = 10):  # coords = {"longitude": 0, "latitude":
             d_yaw = 360 - d_yaw
 
         if d_yaw > 5:
-            if yaw > upper_limit:
+            if lower_limit < -135 and yaw > 90:
+                rover.publish(left)
+                status_stuff("turning left hard")            
+            elif upper_limit > 135 and yaw < -90:
+                rover.publish(right)
+                status_stuff("turning right hard")
+            elif yaw > upper_limit:
                 rover.publish(left)
                 status_stuff("turning left")
             elif yaw < lower_limit:
                 rover.publish(right)
                 status_stuff("turning right")
             else:
-
                 rover.publish(forward)
                 status_stuff("forward")
-
         else:
-
             rover.publish(forward)
             status_stuff("forward")
                 
@@ -157,22 +162,18 @@ def moveTo(coords, yaw_threshold = 10):  # coords = {"longitude": 0, "latitude":
 
     status_stuff("Reached Target Coords")
     rover.publish(stop)
-    
-# coords = {"longitude": 90.451727444, "latitude": 23.768288209999998}
-# 23.768347348, 90.45154665
-# 23.768503124, 90.451401091
-# coords = {"longitude": 90.45166206, "latitude": 23.768117803}
-coords = [
-    [23.768117803, 90.45166206],
-    [23.768347348, 90.45154665],
-    [23.768503124, 90.451401091]
-]
+
+yaw_sub = rospy.Subscriber("/sbg/ekf_euler", SbgEkfEuler, sbg_euler)
+gps_sub = rospy.Subscriber("/sbg/gps_pos", SbgGpsPos, gps_callback)
+autonomous_sub = rospy.Subscriber("/autonomous", SbgGpsPos, autonomous_callback)
+rover = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+status = rospy.Publisher("/status", String, queue_size=10)
+aruco_move = rospy.Publisher("/aruco_move", Bool, queue_size=10)
+bottle_move = rospy.Publisher("/bottle_move", Bool, queue_size=10)
+mallet_move = rospy.Publisher("/mallet_move", Bool, queue_size=10)
+rgb_led = rospy.Publisher("/rgb", Float32, queue_size=10)
+
 if __name__ == "__main__":
-    try:
-        for coord in coords:
-            moveTo(coords=coord)
-            print("next point")
-            sleep(2)
-    except rospy.ROSInterruptException:
-        sys.exit(0)
+    rgb_led.publish(b)
+    rospy.spin()
 

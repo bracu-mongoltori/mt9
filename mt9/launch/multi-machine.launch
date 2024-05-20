@@ -3,16 +3,18 @@
     <machine name="mt-09" address="192.168.1.69" user="mt-09" password="1990" env-loader="~/catkin_ws/devel/loder.sh"/>
 
     <arg name="rover_base" default="/dev/ttyUSB0"/>
-    <arg name="arm" default="/dev/ttyUSB1"/>
-    <arg name="end_effector" default="/dev/ttyACM0"/>
+    <arg name="arm" default="/dev/ttyACM0"/>
+    <!-- <arg name="end_effector" default="/dev/ttyACM0"/> -->
 
-    <!-- <node machine="mt-09" name="rover_node" pkg="rosserial_python" type="serial_node.py" args="$(arg rover_base)"/> -->
-    <!-- <node machine="mt-09" name="arm_node" pkg="rosserial_python" type="serial_node.py" args="$(arg arm)"/> -->
-    <node machine="mt-09" name="ee_node" pkg="rosserial_python" type="serial_node.py" args="$(arg end_effector)"/>
+    <node machine="mt-09" name="rover_node" pkg="rosserial_python" type="serial_node.py" args="$(arg rover_base)"/>
+    <node machine="mt-09" name="arm_node" pkg="rosserial_python" type="serial_node.py" args="$(arg arm)"/>
+    <!-- <node machine="mt-09" name="ee_node" pkg="rosserial_python" type="serial_node.py" args="$(arg end_effector)"/> -->
 
     <!-- <node machine="mt-09" name="key_to_vel" pkg="mt9" type="key_to_vel.py"/> -->
 
-
+    <!-- <node name="keyboard_driver" pkg="mt_arm" type="keyboard_driver.py"/> -->
+    
     <include file="$(find mt9)/launch/joy.launch"/>
+    <include file="$(find mt9)/launch/arm_joy.launch"/>
     
 </launch>
